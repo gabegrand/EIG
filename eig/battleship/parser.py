@@ -46,22 +46,17 @@ class Parser:
             return LiteralNode('set_allcolors', token)
         elif token == 'AllTiles':
             return LiteralNode('set_alltiles', token)
+        # Match number-number location
+        elif re.fullmatch(r'(\d+)-(\d+)', token):
+            location = (int(token.split('-')[0]) - 1, int(token.split('-')[1]) - 1)
+            return LiteralNode('location', location, token)
+        # Match letter-number location
+        elif re.fullmatch(r'([A-Z])-?(\d+)', token):
+            letter, number = re.findall(r'[A-Z]|\d+', token)
+            location = (ord(letter) - ord('A'), int(number) - 1)
+            return LiteralNode('location', location, token)
         else:
-            # Match number-number
-            match = re.fullmatch(r'(\d+)-(\d+)', token)
-            if match:
-                location = (int(match.group(1)) - 1, int(match.group(2)) - 1)
-                return LiteralNode('location', location, token)
-            else:
-                # Match letter-number
-                match = re.fullmatch(r'([A-Z])-?(\d+)', token)
-                if match:
-                    letter = match.group(1)
-                    number = int(match.group(2)) - 1
-                    location = (ord(letter) - ord('A'), number)
-                    return LiteralNode('location', location, token)
-                else:
-                    raise ProgramSyntaxError(token, 'Unrecognized token')
+            raise ProgramSyntaxError(token, 'Unrecognized token')
 
     @staticmethod
     def parse_function(program : list):
