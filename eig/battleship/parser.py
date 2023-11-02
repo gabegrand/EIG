@@ -18,14 +18,14 @@ class Parser:
         # perform type checks
         Parser.type_check(ast)
         top_type = ast.dtype
-        if top_type not in {DataType.BOOLEAN, DataType.NUMBER, 
+        if top_type not in {DataType.BOOLEAN, DataType.NUMBER,
             DataType.LOCATION, DataType.COLOR, DataType.ORIENTATION}:
             raise ProgramSyntaxError(program, "Top level type cannot be {}".format(top_type))
 
         # TODO: Fix this?
         #if optimization:
         #    ast, _ = Parser.optimize(ast)
-        
+
         return ast
 
     @staticmethod
@@ -47,13 +47,22 @@ class Parser:
         elif token == 'AllTiles':
             return LiteralNode('set_alltiles', token)
         else:
+            # Match number-number
             match = re.fullmatch(r'(\d+)-(\d+)', token)
             if match:
                 location = (int(match.group(1)) - 1, int(match.group(2)) - 1)
                 return LiteralNode('location', location, token)
             else:
-                raise ProgramSyntaxError(token, 'Unrecognized token')
-    
+                # Match letter-number
+                match = re.fullmatch(r'([A-Z])-?(\d+)', token)
+                if match:
+                    letter = match.group(1)
+                    number = int(match.group(2)) - 1
+                    location = (ord(letter) - ord('A'), number)
+                    return LiteralNode('location', location, token)
+                else:
+                    raise ProgramSyntaxError(token, 'Unrecognized token')
+
     @staticmethod
     def parse_function(program : list):
         # find function information
@@ -64,7 +73,7 @@ class Parser:
             param_num = func_config.param_num
         else:
             raise ProgramSyntaxError(' '.join(program), 'Unrecognized function name "{}"'.format(func_symbol))
-        
+
         # parse parameters first
         subprograms = []
         start_func = -1
@@ -84,11 +93,11 @@ class Parser:
                     if in_func_level == 0:
                         if start_func + 1 == idx:
                             raise ProgramSyntaxError(program[start_func: idx + 1])
-                        subprograms.append(program[start_func: idx + 1])    
+                        subprograms.append(program[start_func: idx + 1])
             elif in_func_level == 0:
                 # single token
                 subprograms.append([program[idx]])
-        
+
         # check if parameter number is correct
         if (len(subprograms) == 0) or (param_num >= 0 and (not len(subprograms) == param_num)):
             raise ProgramSyntaxError(' '.join(program),
@@ -136,7 +145,7 @@ class Parser:
                 if node.dtype == DataType.LAMBDA_Y:
                     node.dtype = DataType.LOCATION
             return
-        
+
         # process children
         if node.ntype == 'lambda_op':
             if in_lambda is None: in_lambda = []
@@ -152,7 +161,7 @@ class Parser:
         else:
             for c in node.children:
                 Parser.type_check(c, in_lambda)
-        
+
         # perform type check of current node
         param_dtypes = tuple(c.dtype for c in node.children)
         accepted_dtypes = NODES[node.ntype].param_dtypes
@@ -169,7 +178,7 @@ class Parser:
         elif isinstance(accepted_dtypes, list):
             eval_type = None
             for i, types in enumerate(accepted_dtypes):
-                if Parser.type_check_tuple(types, param_dtypes) is True: 
+                if Parser.type_check_tuple(types, param_dtypes) is True:
                     if isinstance(eval_dtypes, list):
                         eval_type = eval_dtypes[i]
                     else: eval_type = eval_dtypes
@@ -195,7 +204,7 @@ class Parser:
         # leafs
         if node.children is None:
             return node, not isinstance(node, LambdaVarNode)
-        
+
         # intermediate nodes
         is_and = (node.ntype == 'and_op')
         is_or = (node.ntype == 'or_op')
@@ -233,7 +242,7 @@ class Parser:
             elif node.dtype == DataType.ORIENTATION: ntype = 'orientation'
             else:
                 if node.ntype == 'map_op':
-                # if the body of its lambda function is constant, then 
+                # if the body of its lambda function is constant, then
                 # map function can be optimized as a set of consts
                     if node.dtype == DataType.SET_B: item_ntype = 'boolean'
                     elif node.dtype == DataType.SET_L: item_ntype = 'location'
@@ -245,7 +254,7 @@ class Parser:
                     set_node.dtype = node.dtype
                     return set_node, True
                 return node, True
-                
+
             const_node = LiteralNode(ntype, value, node.prog)
             const_node.dtype = node.dtype
             return const_node, True
