@@ -50,10 +50,15 @@ class Parser:
         elif re.fullmatch(r'(\d+)-(\d+)', token):
             location = (int(token.split('-')[0]) - 1, int(token.split('-')[1]) - 1)
             return LiteralNode('location', location, token)
-        # Match letter-number location
+        # Match number-letter location (letters are columns)
+        elif re.fullmatch(r'(\d+)-?([A-Z])', token):
+            number, letter = re.findall(r'[A-Z]|\d+', token)
+            location = (int(number) - 1, ord(letter) - ord('A'))
+            return LiteralNode('location', location, token)
+        # Match letter-number location (letters are columns)
         elif re.fullmatch(r'([A-Z])-?(\d+)', token):
             letter, number = re.findall(r'[A-Z]|\d+', token)
-            location = (ord(letter) - ord('A'), int(number) - 1)
+            location = (int(number) - 1, ord(letter) - ord('A'))
             return LiteralNode('location', location, token)
         else:
             raise ProgramSyntaxError(token, 'Unrecognized token')
