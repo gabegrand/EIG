@@ -5,7 +5,7 @@ from .python.executor import Executor
 class Parser:
 
     @staticmethod
-    def parse(program : str, optimization=False):
+    def parse(program : str, optimization=False, enforce_type=True):
         # tokenize the program
         tokens = program.replace('(', ' ( ').replace(')', ' ) ').split()
         try:
@@ -18,9 +18,9 @@ class Parser:
         # perform type checks
         Parser.type_check(ast)
         top_type = ast.dtype
-        if top_type not in {DataType.BOOLEAN, DataType.NUMBER,
+        if enforce_type and top_type not in {DataType.BOOLEAN, DataType.NUMBER,
             DataType.LOCATION, DataType.COLOR, DataType.ORIENTATION}:
-            raise ProgramSyntaxError(program, "Top level type cannot be {}".format(top_type))
+            raise TypeError(program, "Top level type cannot be {}".format(top_type))
 
         # TODO: Fix this?
         #if optimization:

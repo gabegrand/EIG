@@ -14,7 +14,7 @@ class NodeConfig:
     a tuple (e.g. (DataType.NUMBER, ) or (DataType.LAMBDA_X, DataType.BOOLEAN)), whose length is 1 or the same
             as number of params, means types of params must be exactly in correspondance of types in the tuple.
             Length 1 means all parameters have the same type;
-    a list of tuples (e.g. [(DataType.LAMBDA_FXB, DataType.SET_B), (DataType.LAMBDA_FXN, DataType.SET_N)]) 
+    a list of tuples (e.g. [(DataType.LAMBDA_FXB, DataType.SET_B), (DataType.LAMBDA_FXN, DataType.SET_N)])
             means the combination of params types can be any of the tuples in the list.
 
     dtype also accepts two formats:
@@ -53,7 +53,7 @@ class DataType(Enum):
 # mapping from ntype to config
 NODES = {
     # basic functions
-    'equal': NodeConfig('equal', 2, DataType.BOOLEAN, [(DataType.BOOLEAN, ), (DataType.NUMBER, ), 
+    'equal': NodeConfig('equal', 2, DataType.BOOLEAN, [(DataType.BOOLEAN, ), (DataType.NUMBER, ),
                                         (DataType.COLOR, ), (DataType.LOCATION, ), (DataType.ORIENTATION, )]),
     'set_equal': NodeConfig('set_equal', 1, DataType.BOOLEAN, (DataType.SET_N, )),
     'greater': NodeConfig('greater', 2, DataType.BOOLEAN, (DataType.NUMBER, )),
@@ -81,16 +81,16 @@ NODES = {
     # set functions
     'any_op': NodeConfig('any_op', 1, DataType.BOOLEAN, (DataType.SET_B, )),
     'all_op': NodeConfig('all_op', 1, DataType.BOOLEAN, (DataType.SET_B, )),
-    'map_op': NodeConfig('map_op', 2, [DataType.SET_B, DataType.SET_B, DataType.SET_L, DataType.SET_N], 
+    'map_op': NodeConfig('map_op', 2, [DataType.SET_B, DataType.SET_B, DataType.SET_L, DataType.SET_N],
                     [(DataType.LAMBDA_FXB, DataType.SET_S), (DataType.LAMBDA_FYB, DataType.SET_L),
                      (DataType.LAMBDA_FXL, DataType.SET_S), (DataType.LAMBDA_FXN, DataType.SET_S)]),
-    'set_op': NodeConfig('set_op', -1, [DataType.SET_L, DataType.SET_L, DataType.SET_S, DataType.SET_S], 
+    'set_op': NodeConfig('set_op', -1, [DataType.SET_L, DataType.SET_L, DataType.SET_S, DataType.SET_S],
                     [(DataType.SET_LITERAL_L, ), (DataType.LOCATION, ), (DataType.SET_LITERAL_S, ), (DataType.COLOR, )]),
     'set_diff': NodeConfig('set_diff', 2, DataType.SET_L, (DataType.SET_L, )),
     'union': NodeConfig('union', 2, DataType.SET_L, (DataType.SET_L, )),
     'intersect': NodeConfig('intersect', 2, DataType.SET_L, (DataType.SET_L, )),
     'unique': NodeConfig('unique', 1, DataType.SET_L, (DataType.SET_L, )),
-    'lambda_op': NodeConfig('lambda_op', 2, [DataType.LAMBDA_FXB, DataType.LAMBDA_FXL, DataType.LAMBDA_FXN, DataType.LAMBDA_FYB], 
+    'lambda_op': NodeConfig('lambda_op', 2, [DataType.LAMBDA_FXB, DataType.LAMBDA_FXL, DataType.LAMBDA_FXN, DataType.LAMBDA_FYB],
                     [(DataType.LAMBDA_X, DataType.BOOLEAN), (DataType.LAMBDA_X, DataType.LOCATION),
                      (DataType.LAMBDA_X, DataType.NUMBER), (DataType.LAMBDA_Y, DataType.BOOLEAN)]),
 
@@ -155,6 +155,9 @@ class ProgramSyntaxError(Exception):
         # maybe raise a location during recursive parsing, and package the real exception at top level
         return "Error found in the program: \n {} around '{}'".format(self.error_msg, self.program)
 
+class TypeError(ProgramSyntaxError):
+    def __init__(self, program, error_msg="Type Error"):
+        super().__init__(program=program, error_msg=error_msg)
 
 class Node:
     def __init__(self, ntype, children, prog):
@@ -181,7 +184,7 @@ class LambdaVarNode(Node):
     def __init__(self, var, value):
         super().__init__('lambda_{}'.format(var), None, value)
         self.value = value
-    
+
     def to_dict(self):
         return {'type': self.ntype,
                 'value': self.value}
