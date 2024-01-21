@@ -259,3 +259,15 @@ class Parser:
             const_node.dtype = node.dtype
             return const_node, True
         else: return node, False
+
+    @staticmethod
+    def depth(program: str):
+        """Returns the depth of the program AST."""
+
+        def compute_depth(node):
+            if not node.children:
+                return 1
+            return 1 + max(compute_depth(c) for c in node.children)
+
+        ast = Parser.parse(program)
+        return compute_depth(ast)
